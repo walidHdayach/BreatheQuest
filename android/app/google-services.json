@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "331617273791",
+    "project_id": "breathequest-62385",
+    "storage_bucket": "breathequest-62385.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:331617273791:android:12dafa37ea97ad75efc30a",
+        "android_client_info": {
+          "package_name": "com.breathequest.breathe_quest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "331617273791-t0un29sm82b9ae8ncun8n3tk6if6dl2p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOFuHNyZYDzbMbxCwMBaMN9am7kvHdk1k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "331617273791-t0un29sm82b9ae8ncun8n3tk6if6dl2p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
