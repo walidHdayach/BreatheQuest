@@ -130,14 +130,23 @@ class FirestoreService {
   /// Sessions and total minutes for the current ISO week (Monday–Sunday).
   Future<({int sessions, int minutes})> getThisWeekStats() async {
     final sessions = await getSessionHistory(limit: 100);
+    return _computeWeekStats(sessions);
+  }
+
+  Stream<({int sessions, int minutes})> watchThisWeekStats() {
+    return watchSessionHistory(limit: 100).map(_computeWeekStats);
+  }
+
+  static ({int sessions, int minutes}) _computeWeekStats(List<SessionRecord> sessions) {
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     final weekStartMidnight = DateTime(weekStart.year, weekStart.month, weekStart.day);
+    final weekEnd = weekStartMidnight.add(const Duration(days: 7));
     int count = 0;
     int minutes = 0;
     for (final s in sessions) {
       if (s.createdAt.isBefore(weekStartMidnight)) break;
-      if (s.createdAt.isAfter(weekStartMidnight.add(const Duration(days: 7)))) continue;
+      if (!s.createdAt.isBefore(weekEnd)) continue;
       count++;
       minutes += s.durationSec ~/ 60;
     }

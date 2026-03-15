@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants.dart';
@@ -22,6 +23,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   bool _isInhale = true;
   bool _isPaused = false;
   bool _hasStopped = false;
+  bool _showCycleFeedback = false;
+  Timer? _feedbackTimer;
 
   SessionConfig get _config =>
       AppConstants.sessionConfigs[widget.mode] ?? AppConstants.sessionConfigs['calm']!;
@@ -44,7 +47,15 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
 
   void _onBreathPhase(bool isInhale) {
     if (_isInhale && !isInhale) {
-      setState(() => _cyclesCompleted++);
+      _feedbackTimer?.cancel();
+      setState(() {
+        _cyclesCompleted++;
+        _showCycleFeedback = true;
+      });
+      HapticFeedback.lightImpact();
+      _feedbackTimer = Timer(const Duration(milliseconds: 600), () {
+        if (mounted) setState(() => _showCycleFeedback = false);
+      });
     }
     _isInhale = isInhale;
   }
@@ -76,6 +87,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _feedbackTimer?.cancel();
     super.dispose();
   }
 
@@ -106,11 +118,34 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
             const SizedBox(height: 16),
             SizedBox(
               height: 260,
-              child: BreathingCircle(
-                inhaleSec: _config.inhaleSec,
-                exhaleSec: _config.exhaleSec,
-                paused: _isPaused,
-                onBreathPhase: _onBreathPhase,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  BreathingCircle(
+                    inhaleSec: _config.inhaleSec,
+                    exhaleSec: _config.exhaleSec,
+                    paused: _isPaused,
+                    onBreathPhase: _onBreathPhase,
+                  ),
+                  AnimatedOpacity(
+                    opacity: _showCycleFeedback ? 1 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Bien !',
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),

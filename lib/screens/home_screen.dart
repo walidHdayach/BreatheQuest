@@ -10,8 +10,8 @@ final userProfileProvider = StreamProvider((ref) {
   return ref.watch(firestoreServiceProvider).watchUserProfile();
 });
 
-final weeklyStatsProvider = FutureProvider((ref) async {
-  return ref.read(firestoreServiceProvider).getThisWeekStats();
+final weeklyStatsProvider = StreamProvider((ref) {
+  return ref.watch(firestoreServiceProvider).watchThisWeekStats();
 });
 
 class HomeScreen extends ConsumerWidget {
@@ -59,7 +59,16 @@ class HomeScreen extends ConsumerWidget {
                       sessions: stats.sessions,
                       minutes: stats.minutes,
                     ),
-                    loading: () => const SizedBox.shrink(),
+                    loading: () => const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )),
+                      ),
+                    ),
                     error: (_, __) => const SizedBox.shrink(),
                   ),
               const SizedBox(height: 24),
