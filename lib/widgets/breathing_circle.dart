@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../core/constants.dart';
 
 /// Animates a circle that expands (inhale) and contracts (exhale) according to [inhaleSec] and [exhaleSec].
 class BreathingCircle extends StatefulWidget {

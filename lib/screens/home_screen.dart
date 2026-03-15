@@ -10,6 +10,10 @@ final userProfileProvider = StreamProvider((ref) {
   return ref.watch(firestoreServiceProvider).watchUserProfile();
 });
 
+final weeklyStatsProvider = FutureProvider((ref) async {
+  return ref.read(firestoreServiceProvider).getThisWeekStats();
+});
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -49,6 +53,15 @@ class HomeScreen extends ConsumerWidget {
                 streak: profile?.streak ?? 0,
                 lastSessionAt: profile?.lastSessionAt,
               ),
+              const SizedBox(height: 16),
+              ref.watch(weeklyStatsProvider).when(
+                    data: (stats) => _WeeklyStatsCard(
+                      sessions: stats.sessions,
+                      minutes: stats.minutes,
+                    ),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
               const SizedBox(height: 24),
               Text(
                 'Choisir une session',
@@ -88,7 +101,7 @@ class _StreakCard extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            Icon(Icons.local_fire_department, color: AppTheme.primary, size: 40),
+            const Icon(Icons.local_fire_department, color: AppTheme.primary, size: 40),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -133,6 +146,43 @@ class _StreakCard extends StatelessWidget {
   }
 }
 
+class _WeeklyStatsCard extends StatelessWidget {
+  final int sessions;
+  final int minutes;
+
+  const _WeeklyStatsCard({required this.sessions, required this.minutes});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_today, color: AppTheme.primary, size: 32),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Cette semaine',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  Text(
+                    '$sessions session${sessions != 1 ? 's' : ''} • $minutes min',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SessionCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -156,7 +206,7 @@ class _SessionCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
-                child: Icon(Icons.air, color: AppTheme.primary),
+                child: const Icon(Icons.air, color: AppTheme.primary),
               ),
               const SizedBox(width: 16),
               Expanded(

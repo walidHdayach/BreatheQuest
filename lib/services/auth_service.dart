@@ -1,6 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Web OAuth client ID (Google Cloud Console > Credentials > Web client). Must match index.html meta tag.
+const String _kWebClientId = '331617273791-t0un29sm82b9ae8ncun8n3tk6if6dl2p.apps.googleusercontent.com';
 
 final authStateProvider = StreamProvider<User?>((ref) {
   return FirebaseAuth.instance.authStateChanges();
@@ -10,7 +14,9 @@ final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb ? _kWebClientId : null,
+  );
 
   User? get currentUser => _auth.currentUser;
 

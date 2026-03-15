@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../core/theme.dart';
 import '../core/constants.dart';
 import '../services/firestore_service.dart';
@@ -28,6 +29,7 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
   bool _saved = false;
   String? _coachTip;
   bool _loadingTip = false;
+  String? _selectedConcern;
 
   SessionConfig get _config =>
       AppConstants.sessionConfigs[widget.mode] ?? AppConstants.sessionConfigs['calm']!;
@@ -52,11 +54,23 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
 
   Future<void> _loadCoachTip() async {
     setState(() => _loadingTip = true);
-    final tip = await ref.read(coachTipsServiceProvider).getTip(mode: widget.mode);
-    if (mounted) setState(() {
-      _coachTip = tip;
-      _loadingTip = false;
-    });
+    final tip = await ref.read(coachTipsServiceProvider).getTip(
+          mode: widget.mode,
+          userConcern: _selectedConcern,
+        );
+    if (mounted) {
+      setState(() {
+        _coachTip = tip;
+        _loadingTip = false;
+      });
+    }
+  }
+
+  void _shareSession() {
+    final config = AppConstants.sessionConfigs[widget.mode] ?? AppConstants.sessionConfigs['calm']!;
+    final text = 'J\'ai fait ${widget.cycles} cycles en mode ${config.name} sur BreatheQuest. '
+        'Score : ${widget.score}/100. Respire. Joue. Récupère.';
+    Share.share(text, subject: 'Ma session BreatheQuest');
   }
 
   @override
@@ -88,27 +102,58 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
                 ),
               ),
               if (_saved)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.check_circle, color: AppTheme.primary, size: 20),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text('Session enregistrée', style: TextStyle(color: AppTheme.primary)),
                     ],
                   ),
                 ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => context.go('/home'),
-                  icon: const Icon(Icons.home),
-                  label: const Text('Retour à l\'accueil'),
+                child: OutlinedButton.icon(
+                  onPressed: _shareSession,
+                  icon: const Icon(Icons.share),
+                  label: const Text('Partager ma session'),
                 ),
               ),
               const SizedBox(height: 16),
+              Text(
+                'Conseil du coach',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  _ConcernChip(
+                    label: 'Stress',
+                    value: 'stress',
+                    selected: _selectedConcern == 'stress',
+                    onTap: () => setState(() => _selectedConcern = _selectedConcern == 'stress' ? null : 'stress'),
+                  ),
+                  _ConcernChip(
+                    label: 'Énergie',
+                    value: 'energy',
+                    selected: _selectedConcern == 'energy',
+                    onTap: () => setState(() => _selectedConcern = _selectedConcern == 'energy' ? null : 'energy'),
+                  ),
+                  _ConcernChip(
+                    label: 'Sommeil',
+                    value: 'sleep',
+                    selected: _selectedConcern == 'sleep',
+                    onTap: () => setState(() => _selectedConcern = _selectedConcern == 'sleep' ? null : 'sleep'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -120,7 +165,16 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.lightbulb_outline),
-                  label: Text(_coachTip != null ? 'Conseil du coach' : 'Conseil du coach'),
+                  label: const Text('Voir le conseil'),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.go('/home'),
+                  icon: const Icon(Icons.home),
+                  label: const Text('Retour à l\'accueil'),
                 ),
               ),
               if (_coachTip != null) ...[
@@ -166,6 +220,31 @@ class _ScoreRow extends StatelessWidget {
           Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppTheme.primary)),
         ],
       ),
+    );
+  }
+}
+
+class _ConcernChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ConcernChip({
+    required this.label,
+    required this.value,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      selectedColor: AppTheme.primary.withValues(alpha: 0.2),
+      checkmarkColor: AppTheme.primary,
     );
   }
 }

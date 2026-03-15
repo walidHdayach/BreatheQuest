@@ -8,6 +8,7 @@ import '../screens/home_screen.dart';
 import '../screens/session_screen.dart';
 import '../screens/result_screen.dart';
 import '../screens/profile_screen.dart';
+import '../screens/splash_screen.dart';
 import '../utils/prefs.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -17,26 +18,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/',
+    initialLocation: '/splash',
     redirect: (context, state) async {
-      final isLoggedIn = authState.valueOrNull != null;
       final location = state.uri.path;
+      if (location == '/splash') return null;
+
+      final isLoggedIn = authState.valueOrNull != null;
       final isOnboarding = location == '/onboarding';
       final isLogin = location == '/login';
+      final isAppRoute = location == '/home' ||
+          location.startsWith('/session') ||
+          location.startsWith('/result') ||
+          location == '/profile';
+
+      if (isLoggedIn && isAppRoute) return null;
+      if (isLoggedIn && (isLogin || isOnboarding)) return '/home';
 
       final seenOnboarding = await ref.read(hasSeenOnboardingProvider.future);
-      if (!seenOnboarding && !isOnboarding && !isLogin) {
-        return '/onboarding';
-      }
-      if (!isLoggedIn && !isOnboarding && !isLogin) {
-        return '/login';
-      }
-      if (isLoggedIn && (isLogin || isOnboarding)) {
-        return '/home';
-      }
+      if (!seenOnboarding && !isOnboarding && !isLogin) return '/onboarding';
+      if (!isLoggedIn && !isOnboarding && !isLogin) return '/login';
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (_, __) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/',
         builder: (_, __) => const Scaffold(body: Center(child: CircularProgressIndicator())),

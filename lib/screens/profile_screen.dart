@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../core/theme.dart';
+import '../core/theme_provider.dart';
 import '../models/session_record.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
@@ -71,6 +72,16 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    child: SwitchListTile(
+                      title: const Text('Mode sombre'),
+                      subtitle: const Text('Thème foncé'),
+                      value: ref.watch(themeNotifierProvider).valueOrNull ?? false,
+                      onChanged: (value) =>
+                          ref.read(themeNotifierProvider.notifier).setDark(value),
                     ),
                   ),
                   const SizedBox(height: 24),

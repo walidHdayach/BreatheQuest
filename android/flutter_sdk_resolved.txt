@@ -1,0 +1,3 @@
+from=FLUTTER_ROOT
+path=C:\Users\dilawnor\develop\flutter
+settingsDir=C:\Users\dilawnor\Desktop\just playing\android

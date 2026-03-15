@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants.dart';
 import '../core/theme.dart';
-import '../services/firestore_service.dart';
 import '../widgets/breathing_circle.dart';
 
 class SessionScreen extends ConsumerStatefulWidget {

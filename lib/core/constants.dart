@@ -53,5 +53,5 @@ class SessionConfig {
     required this.totalDurationSec,
   });
 
-  String get breathPattern => '${inhaleSec}-$exhaleSec';
+  String get breathPattern => '$inhaleSec-$exhaleSec';
 }

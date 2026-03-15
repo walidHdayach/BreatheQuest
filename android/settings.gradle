@@ -1,14 +1,41 @@
 pluginManagement {
     def flutterSdkPath = {
-        def properties = new Properties()
-        file("local.properties").withInputStream { properties.load(it) }
-        def flutterSdkPath = properties.getProperty("flutter.sdk")
-        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-        return flutterSdkPath
+        def path = System.getenv("FLUTTER_ROOT")
+        if (path == null || path.isEmpty()) {
+            def gradlePropFile = new File(settingsDir, "gradle.properties")
+            if (gradlePropFile.exists()) {
+                def gradleProps = new Properties()
+                gradlePropFile.withReader("UTF-8") { r -> gradleProps.load(r) }
+                path = gradleProps.getProperty("flutter.sdk")
+            }
+        }
+        if (path == null || path.isEmpty()) {
+            def localPropFile = new File(settingsDir, "local.properties")
+            if (localPropFile.exists()) {
+                def localProps = new Properties()
+                localPropFile.withReader("UTF-8") { r -> localProps.load(r) }
+                path = localProps.getProperty("flutter.sdk")
+            }
+        }
+        if (path == null || path.isEmpty()) {
+            throw new GradleException("Set flutter.sdk in android/gradle.properties (e.g. flutter.sdk=C:/Users/YOU/develop/flutter)")
+        }
+        path = path.trim().replace("/", File.separator)
+        def f = new File(path)
+        if (!f.isAbsolute()) {
+            f = new File(settingsDir, path)
+        }
+        def resolved = f.getAbsolutePath()
+        def gradleDir = new File(resolved, "packages" + File.separator + "flutter_tools" + File.separator + "gradle")
+        if (!gradleDir.exists()) {
+            throw new GradleException("Flutter SDK path invalid (missing packages/flutter_tools/gradle): " + resolved)
+        }
+        return resolved
     }
-    settings.ext.flutterSdkPath = flutterSdkPath
+    def resolvedFlutterPath = flutterSdkPath.call()
+    settings.ext.flutterSdkPath = resolvedFlutterPath
 
-    includeBuild("${settings.ext.flutterSdkPath}/packages/flutter_tools/gradle")
+    includeBuild("${resolvedFlutterPath}/packages/flutter_tools/gradle")
 
     repositories {
         google()
@@ -19,8 +46,8 @@ pluginManagement {
 
 plugins {
     id "dev.flutter.flutter-plugin-loader" version "1.0.0"
-    id "com.android.application" version "7.3.0" apply false
-    id "org.jetbrains.kotlin.android" version "1.7.10" apply false
+    id "com.android.application" version "8.6.0" apply false
+    id "org.jetbrains.kotlin.android" version "2.1.0" apply false
 }
 
 include ":app"

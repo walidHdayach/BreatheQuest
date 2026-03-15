@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_profile.dart';
 import '../models/session_record.dart';
-import '../core/constants.dart';
 
 final firestoreServiceProvider = Provider<FirestoreService>((ref) => FirestoreService());
 
@@ -126,5 +125,22 @@ class FirestoreService {
         .limit(limit)
         .snapshots()
         .map((snap) => snap.docs.map((d) => SessionRecord.fromFirestore(d)).toList());
+  }
+
+  /// Sessions and total minutes for the current ISO week (Monday–Sunday).
+  Future<({int sessions, int minutes})> getThisWeekStats() async {
+    final sessions = await getSessionHistory(limit: 100);
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    final weekStartMidnight = DateTime(weekStart.year, weekStart.month, weekStart.day);
+    int count = 0;
+    int minutes = 0;
+    for (final s in sessions) {
+      if (s.createdAt.isBefore(weekStartMidnight)) break;
+      if (s.createdAt.isAfter(weekStartMidnight.add(const Duration(days: 7)))) continue;
+      count++;
+      minutes += s.durationSec ~/ 60;
+    }
+    return (sessions: count, minutes: minutes);
   }
 }
